@@ -75,7 +75,7 @@
 
                 tbody.innerHTML = data.orders.map(o => `
                     <tr class="hover:bg-zinc-800/40 transition">
-                        <td class="p-4 font-bold text-amber-400">${o.id}</td>
+                        <td class="p-4 font-bold text-amber-400">#${o.id}</td>
                         <td class="p-4 font-bold text-zinc-100">${o.customerName}</td>
                         <td class="p-4 text-zinc-300">${o.phone}</td>
                         <td class="p-4 text-zinc-400 max-w-xs truncate">${o.address}</td>
@@ -88,8 +88,9 @@
                                 ${o.status}
                             </span>
                         </td>
-                        <td class="p-4 text-right">
-                            ${o.status !== 'Delivered' ? `<button onclick="markDelivered('${o.id}')" class="bg-amber-500 text-zinc-950 px-3.5 py-1.5 rounded-lg font-bold hover:bg-amber-400 transition shadow-md">Mark Delivered & WhatsApp</button>` : '<span class="text-emerald-400 font-bold">Completed</span>'}
+                        <td class="p-4 text-right flex items-center justify-end gap-2">
+                            ${o.status !== 'Delivered' ? `<button onclick="markDelivered('${o.id}')" class="bg-amber-500 text-zinc-950 px-3 py-1.5 rounded-lg font-bold hover:bg-amber-400 transition shadow-md">Mark Delivered & WhatsApp</button>` : '<span class="text-emerald-400 font-bold">Completed</span>'}
+                            <button onclick="deleteOrder('${o.id}')" class="bg-red-500/10 text-red-400 border border-red-500/30 px-2.5 py-1.5 rounded-lg font-bold hover:bg-red-500 hover:text-white transition" title="Delete Order">🗑️</button>
                         </td>
                     </tr>
                 `).join('');
@@ -112,6 +113,25 @@
                 }
             } catch (err) {
                 alert('Failed to update order status');
+            }
+        }
+
+        async function deleteOrder(id) {
+            if (!confirm(`Are you sure you want to delete order #${id}?`)) return;
+            try {
+                const res = await fetch(`/api/admin/orders/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'x-admin-token': token }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('🗑️ Order deleted successfully!');
+                    fetchOrders();
+                } else {
+                    alert(data.message || 'Failed to delete order');
+                }
+            } catch (err) {
+                alert('Failed to delete order');
             }
         }
 

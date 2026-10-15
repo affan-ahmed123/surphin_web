@@ -59,7 +59,6 @@ app.post('/api/orders', (req, res) => {
     const { customerName, phone, address, items, totalAmount } = req.body;
     const orders = readJSON(ORDERS_FILE, []);
     
-    // Exactly 4-digit short ID logic (Starting from 1001)
     const nextNum = 1000 + orders.length + 1;
     const fourDigitId = String(nextNum);
 
@@ -113,6 +112,11 @@ app.post('/api/admin/forgot-password', (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otpStore[ADMIN_RECOVERY_PHONE] = otp;
     
+    // Console log for instant local debugging
+    console.log(`\n========================================`);
+    console.log(`🔑 ADMIN PASSWORD RECOVERY OTP: ${otp}`);
+    console.log(`========================================\n`);
+
     const msg = `Your Slurpin.pk Admin Password Recovery OTP is: *${otp}*`;
     const whatsappUrl = `https://wa.me/92${ADMIN_RECOVERY_PHONE.slice(1)}?text=${encodeURIComponent(msg)}`;
     
@@ -160,6 +164,17 @@ app.patch('/api/admin/orders/:id/deliver', verifyAdmin, (req, res) => {
     const whatsappUrl = `https://wa.me/${custPhoneFormatted}?text=${encodeURIComponent(deliveryMsg)}`;
 
     res.json({ success: true, whatsappUrl });
+});
+
+app.delete('/api/admin/orders/:id', verifyAdmin, (req, res) => {
+    let orders = readJSON(ORDERS_FILE, []);
+    const orderExists = orders.some(o => o.id === req.params.id);
+    if (!orderExists) {
+        return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+    orders = orders.filter(o => o.id !== req.params.id);
+    writeJSON(ORDERS_FILE, orders);
+    res.json({ success: true, message: 'Order deleted successfully' });
 });
 
 app.get('/api/admin/queries', verifyAdmin, (req, res) => {
