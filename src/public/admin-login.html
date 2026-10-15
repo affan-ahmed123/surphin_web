@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Slurpin.pk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-zinc-950 text-zinc-100 font-sans flex items-center justify-center h-screen p-4">
+    <div class="bg-zinc-900 border border-zinc-800 p-8 rounded-3xl max-w-md w-full shadow-2xl relative overflow-hidden">
+        <div class="text-center mb-6">
+            <span class="text-3xl">🔒</span>
+            <h1 class="text-2xl font-black text-amber-500 mt-2">Slurpin.pk Admin</h1>
+            <p class="text-xs text-zinc-400 mt-1">Authorized Personnel Only</p>
+        </div>
+
+        <form onsubmit="handleLogin(event)" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Admin Password</label>
+                <input type="password" id="adminPassword" required placeholder="Enter password" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-100 focus:outline-none focus:border-amber-500 transition">
+            </div>
+            <p id="errorMsg" class="text-xs text-red-400 hidden text-center font-semibold"></p>
+            <button type="submit" class="w-full bg-amber-500 text-zinc-950 font-extrabold py-3.5 rounded-xl hover:bg-amber-400 transition shadow-lg shadow-amber-500/20">Login to Dashboard</button>
+        </form>
+
+        <div class="text-center mt-5">
+            <button onclick="openForgotModal()" class="text-xs text-amber-400 hover:underline font-semibold">Forgot Password?</button>
+        </div>
+    </div>
+
+    <!-- Step 1: Forgot Password Modal (Phone Input) -->
+    <div id="forgotModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
+            <button onclick="closeForgotModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-100 text-xl font-bold">&times;</button>
+            <h3 class="text-lg font-bold text-amber-500 mb-1">Password Recovery</h3>
+            <p class="text-xs text-zinc-400 mb-4">Enter authorized admin WhatsApp number to receive recovery OTP.</p>
+
+            <form onsubmit="handleForgotSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Authorized Number</label>
+                    <input type="text" id="recoveryPhone" required placeholder="03032781433" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500">
+                </div>
+                <p id="forgotErrorMsg" class="text-xs text-red-400 hidden text-center font-semibold"></p>
+                <button type="submit" class="w-full bg-amber-500 text-zinc-950 font-extrabold py-3 rounded-xl hover:bg-amber-400 transition">Send WhatsApp OTP</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Step 2: OTP Verification Modal -->
+    <div id="otpModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
+            <button onclick="closeOtpModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-100 text-xl font-bold">&times;</button>
+            <h3 class="text-lg font-bold text-amber-500 mb-1">Enter Verification Code</h3>
+            <p class="text-xs text-zinc-400 mb-4">Check terminal / WhatsApp notification for the 6-digit OTP code.</p>
+
+            <form onsubmit="handleOtpSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1">6-Digit OTP</label>
+                    <input type="text" id="otpCode" required maxlength="6" placeholder="123456" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-center text-lg tracking-widest text-amber-400 font-black focus:outline-none focus:border-amber-500">
+                </div>
+                <p id="otpErrorMsg" class="text-xs text-red-400 hidden text-center font-semibold"></p>
+                <button type="submit" class="w-full bg-amber-500 text-zinc-950 font-extrabold py-3 rounded-xl hover:bg-amber-400 transition">Verify OTP</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Step 3: New Password Modal (Opens in new tab or standalone view) -->
+    <div id="resetModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-amber-500/40 rounded-3xl max-w-sm w-full p-6 shadow-2xl relative">
+            <h3 class="text-lg font-bold text-amber-500 mb-1">Set New Password</h3>
+            <p class="text-xs text-zinc-400 mb-4">Choose a secure new password for your admin panel.</p>
+
+            <form onsubmit="handleResetSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1">New Password</label>
+                    <input type="password" id="newAdminPassword" required placeholder="Min 4 characters" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500">
+                </div>
+                <p id="resetErrorMsg" class="text-xs text-red-400 hidden text-center font-semibold"></p>
+                <button type="submit" class="w-full bg-emerald-500 text-zinc-950 font-extrabold py-3 rounded-xl hover:bg-emerald-400 transition">Update & Login</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let verifiedResetToken = '';
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const password = document.getElementById('adminPassword').value;
+            const errorMsg = document.getElementById('errorMsg');
+
+            try {
+                const res = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    localStorage.setItem('slurpin_admin_token', data.token);
+                    window.location.href = '/admin';
+                } else {
+                    errorMsg.innerText = data.message;
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorMsg.innerText = 'Server error. Please try again.';
+                errorMsg.classList.remove('hidden');
+            }
+        }
+
+        function openForgotModal() { document.getElementById('forgotModal').classList.remove('hidden'); }
+        function closeForgotModal() { document.getElementById('forgotModal').classList.add('hidden'); }
+        function closeOtpModal() { document.getElementById('otpModal').classList.add('hidden'); }
+
+        async function handleForgotSubmit(e) {
+            e.preventDefault();
+            const phone = document.getElementById('recoveryPhone').value;
+            const forgotErrorMsg = document.getElementById('forgotErrorMsg');
+
+            try {
+                const res = await fetch('/api/admin/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('📲 ' + data.message);
+                    closeForgotModal();
+                    document.getElementById('otpModal').classList.remove('hidden');
+                } else {
+                    forgotErrorMsg.innerText = data.message;
+                    forgotErrorMsg.classList.remove('hidden');
+                }
+            } catch (err) {
+                forgotErrorMsg.innerText = 'Error processing request.';
+                forgotErrorMsg.classList.remove('hidden');
+            }
+        }
+
+        async function handleOtpSubmit(e) {
+            e.preventDefault();
+            const otp = document.getElementById('otpCode').value;
+            const otpErrorMsg = document.getElementById('otpErrorMsg');
+
+            try {
+                const res = await fetch('/api/admin/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ otp })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    verifiedResetToken = data.resetToken;
+                    closeOtpModal();
+                    // Open new password tab / modal window
+                    document.getElementById('resetModal').classList.remove('hidden');
+                } else {
+                    otpErrorMsg.innerText = data.message;
+                    otpErrorMsg.classList.remove('hidden');
+                }
+            } catch (err) {
+                otpErrorMsg.innerText = 'Invalid OTP verification.';
+                otpErrorMsg.classList.remove('hidden');
+            }
+        }
+
+        async function handleResetSubmit(e) {
+            e.preventDefault();
+            const newPassword = document.getElementById('newAdminPassword').value;
+            const resetErrorMsg = document.getElementById('resetErrorMsg');
+
+            try {
+                const res = await fetch('/api/admin/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resetToken: verifiedResetToken, newPassword })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('🎉 Password successfully updated! Please login with your new password.');
+                    window.location.reload();
+                } else {
+                    resetErrorMsg.innerText = data.message;
+                    resetErrorMsg.classList.remove('hidden');
+                }
+            } catch (err) {
+                resetErrorMsg.innerText = 'Failed to update password.';
+                resetErrorMsg.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

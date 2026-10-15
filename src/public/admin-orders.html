@@ -1,0 +1,127 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Orders - Slurpin.pk Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-zinc-950 text-zinc-100 font-sans min-h-screen">
+
+    <nav class="bg-zinc-900 border-b border-zinc-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">🥟</span>
+            <span class="font-extrabold text-lg text-amber-500">Slurpin.pk Admin</span>
+        </div>
+        <div class="flex items-center gap-4 text-xs font-semibold">
+            <a href="/" target="_blank" class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-lg hover:bg-amber-500 hover:text-zinc-950 transition">🏠 View Website</a>
+            <a href="/admin" class="text-amber-400 border-b-2 border-amber-500 pb-0.5">Live Orders</a>
+            <a href="/admin/menu" class="text-zinc-300 hover:text-amber-400 transition">Menu Manager</a>
+            <a href="/admin/queries" class="text-zinc-300 hover:text-amber-400 transition">Customer Queries</a>
+            <a href="/admin/sales" class="text-zinc-300 hover:text-amber-400 transition">Sales Report</a>
+            <button onclick="logout()" class="bg-red-500/10 text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-500 hover:text-white transition">Logout</button>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-6 mt-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-black text-amber-500">Live Order Tracking</h1>
+                <p class="text-xs text-zinc-400 mt-1">Manage incoming orders and dispatch WhatsApp confirmations.</p>
+            </div>
+        </div>
+
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-zinc-950 border-b border-zinc-800 text-zinc-400 uppercase tracking-wider">
+                            <th class="p-4">Order ID</th>
+                            <th class="p-4">Customer</th>
+                            <th class="p-4">Phone</th>
+                            <th class="p-4">Address</th>
+                            <th class="p-4">Items & Total</th>
+                            <th class="p-4">Status</th>
+                            <th class="p-4 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody" class="divide-y divide-zinc-800/80">
+                        <tr>
+                            <td colspan="7" class="p-6 text-center text-zinc-500">Loading orders...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const token = localStorage.getItem('slurpin_admin_token');
+        if (!token) window.location.href = '/admin/login';
+
+        async function fetchOrders() {
+            try {
+                const res = await fetch('/api/admin/orders', {
+                    headers: { 'x-admin-token': token }
+                });
+                if (res.status === 401) { logout(); return; }
+                const data = await res.json();
+                const tbody = document.getElementById('ordersTableBody');
+
+                if (!data.orders || data.orders.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-zinc-500">No orders received yet.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.orders.map(o => `
+                    <tr class="hover:bg-zinc-800/40 transition">
+                        <td class="p-4 font-bold text-amber-400">${o.id}</td>
+                        <td class="p-4 font-bold text-zinc-100">${o.customerName}</td>
+                        <td class="p-4 text-zinc-300">${o.phone}</td>
+                        <td class="p-4 text-zinc-400 max-w-xs truncate">${o.address}</td>
+                        <td class="p-4 text-zinc-300">
+                            ${o.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}<br/>
+                            <strong class="text-amber-400">Rs. ${o.totalAmount}</strong>
+                        </td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${o.status === 'Delivered' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'}">
+                                ${o.status}
+                            </span>
+                        </td>
+                        <td class="p-4 text-right">
+                            ${o.status !== 'Delivered' ? `<button onclick="markDelivered('${o.id}')" class="bg-amber-500 text-zinc-950 px-3.5 py-1.5 rounded-lg font-bold hover:bg-amber-400 transition shadow-md">Mark Delivered & WhatsApp</button>` : '<span class="text-emerald-400 font-bold">Completed</span>'}
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to load orders');
+            }
+        }
+
+        async function markDelivered(id) {
+            try {
+                const res = await fetch(`/api/admin/orders/${id}/deliver`, {
+                    method: 'PATCH',
+                    headers: { 'x-admin-token': token }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ Order marked as Delivered!');
+                    if(data.whatsappUrl) window.open(data.whatsappUrl, '_blank');
+                    fetchOrders();
+                }
+            } catch (err) {
+                alert('Failed to update order status');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('slurpin_admin_token');
+            window.location.href = '/admin/login';
+        }
+
+        window.addEventListener('load', fetchOrders);
+        setInterval(fetchOrders, 5000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+﻿{
+  "name": "slurpin-pk",
+  "version": "1.0.0",
+  "description": "Slurpin.pk Web Application",
+  "main": "dist/server.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.24",
+    "typescript": "^5.3.3"
+  }
+}

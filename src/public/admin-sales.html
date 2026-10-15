@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Report - Slurpin.pk Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-zinc-950 text-zinc-100 font-sans min-h-screen">
+
+    <nav class="bg-zinc-900 border-b border-zinc-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">🥟</span>
+            <span class="font-extrabold text-lg text-amber-500">Slurpin.pk Admin</span>
+        </div>
+        <div class="flex items-center gap-4 text-xs font-semibold">
+            <a href="/" target="_blank" class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-lg hover:bg-amber-500 hover:text-zinc-950 transition">🏠 View Website</a>
+            <a href="/admin" class="text-zinc-300 hover:text-amber-400 transition">Live Orders</a>
+            <a href="/admin/menu" class="text-zinc-300 hover:text-amber-400 transition">Menu Manager</a>
+            <a href="/admin/queries" class="text-zinc-300 hover:text-amber-400 transition">Customer Queries</a>
+            <a href="/admin/sales" class="text-amber-400 border-b-2 border-amber-500 pb-0.5">Sales Report</a>
+            <button onclick="logout()" class="bg-red-500/10 text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-500 hover:text-white transition">Logout</button>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto p-6 mt-6">
+        <h1 class="text-2xl font-black text-amber-500 mb-6">Monthly Sales Analytics</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-xl">
+                <p class="text-xs text-zinc-400 uppercase font-bold">Total Delivered Revenue</p>
+                <h3 id="totalRev" class="text-3xl font-black text-amber-400 mt-2">Rs. 0</h3>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-xl">
+                <p class="text-xs text-zinc-400 uppercase font-bold">Total Delivered Orders</p>
+                <h3 id="totalOrders" class="text-3xl font-black text-emerald-400 mt-2">0</h3>
+            </div>
+        </div>
+
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl">
+            <h3 class="text-lg font-bold text-zinc-100 mb-4">Monthly Breakdown</h3>
+            <div id="monthlyList" class="space-y-3">
+                <p class="text-zinc-500 text-xs">Loading analytics...</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const token = localStorage.getItem('slurpin_admin_token');
+        if (!token) window.location.href = '/admin/login';
+
+        async function fetchSales() {
+            try {
+                const res = await fetch('/api/admin/sales-report', {
+                    headers: { 'x-admin-token': token }
+                });
+                if (res.status === 401) { logout(); return; }
+                const data = await res.json();
+
+                document.getElementById('totalRev').innerText = `Rs. ${data.overallRevenue.toLocaleString()}`;
+                document.getElementById('totalOrders').innerText = data.overallDeliveredOrders;
+
+                const list = document.getElementById('monthlyList');
+                if (!data.monthlyReport || data.monthlyReport.length === 0) {
+                    list.innerHTML = '<p class="text-zinc-500 text-xs">No delivered orders for reports yet.</p>';
+                    return;
+                }
+
+                list.innerHTML = data.monthlyReport.map(m => `
+                    <div class="bg-zinc-950 border border-zinc-800 p-4 rounded-xl flex justify-between items-center text-xs">
+                        <span class="font-bold text-zinc-300">${m.month}</span>
+                        <span class="text-zinc-400">Orders: <strong class="text-zinc-200">${m.totalOrders}</strong></span>
+                        <span class="text-amber-400 font-extrabold text-sm">Rs. ${m.totalRevenue.toLocaleString()}</span>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to load sales');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('slurpin_admin_token');
+            window.location.href = '/admin/login';
+        }
+
+        window.addEventListener('load', fetchSales);
+    </script>
+</body>
+</html>
