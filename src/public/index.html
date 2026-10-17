@@ -64,45 +64,66 @@
 
         @media print {
             @page {
-                size: 80mm auto;
-                margin: 0;
+                size: auto;
+                margin: 0mm;
             }
-            body, html {
+            html, body {
+                height: 100% !important;
+                overflow: hidden !important;
                 background: #ffffff !important;
                 color: #000000 !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                width: 80mm !important;
             }
-            body * { visibility: hidden; }
-            #receiptBox, #receiptBox * { visibility: visible; }
+            body > *:not(#receiptModal) {
+                display: none !important;
+            }
             #receiptModal {
                 position: absolute !important;
-                left: 0 !important;
-                top: 0 !important;
-                width: 80mm !important;
+                inset: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
                 background: #ffffff !important;
-                display: block !important;
-                padding: 5mm !important;
-                z-index: 999999 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 0 !important;
+                margin: 0 !important;
             }
-            #receiptBox {
-                border: none !important;
-                box-shadow: none !important;
+            #receiptContentBox {
                 background: #ffffff !important;
                 color: #000000 !important;
-                width: 100% !important;
-                padding: 0 !important;
+                border: 2px solid #000000 !important;
+                width: 90% !important;
+                max-width: 380px !important;
+                box-shadow: none !important;
+                padding: 20px !important;
+                border-radius: 12px !important;
             }
-            .no-print { display: none !important; }
+            #receiptContentBox * {
+                color: #000000 !important;
+            }
+            #receiptContentBox .text-amber-500,
+            #receiptContentBox .text-amber-400 {
+                color: #000000 !important;
+            }
+            #receiptContentBox .bg-zinc-950 {
+                background: #f3f4f6 !important;
+                border: 1px solid #d1d5db !important;
+            }
+            .no-print {
+                display: none !important;
+            }
         }
     </style>
 </head>
-<body class="bg-zinc-950 text-zinc-100 font-sans selection:bg-amber-500 selection:text-zinc-950 relative overflow-x-hidden pb-32">
+<body class="bg-zinc-950 text-zinc-100 font-sans selection:bg-amber-500 selection:text-zinc-950 relative overflow-x-hidden pb-24">
 
+    <!-- Ambient Background Orbs -->
     <div class="fixed top-20 -left-20 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none animate-glow-orb"></div>
     <div class="fixed bottom-10 -right-20 w-[30rem] h-[30rem] bg-amber-600/10 rounded-full blur-3xl pointer-events-none animate-glow-orb" style="animation-delay: 4s;"></div>
 
+    <!-- Navigation Bar -->
     <nav class="fixed top-0 left-0 right-0 z-50 bg-zinc-950/85 backdrop-blur-md border-b border-zinc-800/80 transition-all duration-300 shadow-xl shadow-black/50">
         <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <a href="#" class="group text-xl font-extrabold tracking-wider text-amber-500 flex items-center gap-2">
@@ -118,16 +139,16 @@
                         <span class="animate-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </span>
-                    WhatsApp: +92 336 6833202
+                    WhatsApp: 0336-6833202
                 </a>
             </div>
             <div class="flex items-center gap-3">
                 <a href="https://instagram.com/slurpin.pk?mdxt=cWhpdXFkMndqamxz" target="_blank" class="bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold hover:scale-105 transition-all">Instagram</a>
-                <a href="/admin" class="bg-zinc-900 border border-zinc-800 text-amber-400 px-4 py-2 rounded-xl text-xs font-bold hover:bg-amber-500 hover:text-zinc-950 transition-all">Admin Panel</a>
             </div>
         </div>
     </nav>
 
+    <!-- Hero Section -->
     <header class="relative bg-cover bg-center h-screen flex items-center justify-center text-center px-4 overflow-hidden" style="background-image: linear-gradient(to bottom, rgba(9,9,11,0.65), rgba(9,9,11,0.98)), url('https://images.unsplash.com/photo-1555126634-323283e090fa?auto=format&fit=crop&w=1600&q=80');">
         <div class="max-w-3xl mx-auto pt-16 animate-float-slow">
             <span class="bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold px-4 py-2 rounded-full uppercase tracking-widest shadow-inner backdrop-blur-sm">Karachi's Finest Flavors</span>
@@ -140,64 +161,18 @@
         </div>
     </header>
 
+    <!-- Menu Section -->
     <section id="menu" class="py-24 px-6 max-w-6xl mx-auto relative z-10">
         <div class="text-center mb-16 reveal">
             <h2 class="text-3xl md:text-4xl font-extrabold text-amber-500 tracking-tight">Our Signature Menu</h2>
-            <p class="text-zinc-400 text-sm mt-2">Apne pasand ke items select karein, quantities barhayein, aur aik sath order place karein!</p>
+            <p class="text-zinc-400 text-sm mt-2">Crafted with authentic oriental spices and freshest ingredients.</p>
         </div>
         <div id="dynamic-menu-container" class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <p class="text-zinc-500 text-center col-span-2">Loading menu items...</p>
         </div>
     </section>
 
-    <!-- Floating Order Bar -->
-    <div id="floatingOrderBar" class="fixed bottom-0 left-0 right-0 bg-zinc-900/95 backdrop-blur-md border-t border-zinc-800 p-4 z-40 shadow-2xl transition-transform duration-300">
-        <div class="max-w-4xl mx-auto flex items-center justify-between gap-4">
-            <div>
-                <span class="text-xs text-zinc-400 block">Selected Items: <strong id="selectedCount" class="text-amber-400">0 plates</strong></span>
-                <span class="text-lg font-black text-amber-500" id="floatingTotalPrice">Rs. 0</span>
-            </div>
-            <button onclick="openCheckoutModal()" id="checkoutBtn" disabled class="bg-zinc-800 text-zinc-500 font-bold px-6 py-3 rounded-xl text-xs transition shadow-md cursor-not-allowed">
-                Review Order & Checkout
-            </button>
-        </div>
-    </div>
-
-    <!-- Checkout Modal -->
-    <div id="checkoutModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-            <button onclick="closeCheckoutModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-100 text-xl font-bold">&times;</button>
-            <h3 class="text-xl font-bold text-amber-500 mb-1">Finalize Your Order</h3>
-            <p class="text-xs text-zinc-400 mb-4">Aapke selected items ki list:</p>
-
-            <div id="modalSelectedList" class="bg-zinc-950 p-3 rounded-xl border border-zinc-800 space-y-2 mb-4 text-xs">
-                <!-- Selected items will render here -->
-            </div>
-
-            <form id="orderForm" onsubmit="submitOrder(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Full Name</label>
-                    <input type="text" id="custName" required placeholder="Ahmad Khan" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Phone / WhatsApp Number</label>
-                    <input type="text" id="custPhone" required placeholder="+92 336 6833202" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Delivery Address</label>
-                    <textarea id="custAddress" required rows="2" placeholder="House #, Street, Area, Karachi" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500"></textarea>
-                </div>
-
-                <div class="pt-2 border-t border-zinc-800 flex justify-between items-center">
-                    <span class="text-xs text-zinc-400">Grand Total:</span>
-                    <span id="modalGrandTotal" class="text-lg font-black text-amber-400">Rs. 0</span>
-                </div>
-
-                <button type="submit" class="w-full bg-amber-500 text-zinc-950 font-extrabold py-3 rounded-xl hover:bg-amber-400 transition shadow-lg shadow-amber-500/20">Place Order Now</button>
-            </form>
-        </div>
-    </div>
-
+    <!-- Customer Query Section -->
     <section id="query" class="py-20 px-6 max-w-3xl mx-auto my-12 relative z-10 reveal">
         <div class="bg-zinc-900/50 border border-zinc-800/90 rounded-3xl p-8 md:p-10 shadow-2xl backdrop-blur-md">
             <div class="text-center mb-8">
@@ -212,183 +187,239 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-zinc-300 mb-1.5">WhatsApp / Phone</label>
-                        <input type="text" id="queryPhone" required placeholder="+92 336 6833202" class="w-full bg-zinc-950/80 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-100 focus:outline-none focus:border-amber-500">
+                        <input type="text" id="queryPhone" required placeholder="03366833202" class="w-full bg-zinc-950/80 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-100 focus:outline-none focus:border-amber-500">
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Your Query / Message</label>
                     <textarea id="queryMessage" required rows="3" placeholder="Tell us about your catering or spicy preferences..." class="w-full bg-zinc-950/80 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-100 focus:outline-none focus:border-amber-500"></textarea>
                 </div>
-                <button type="submit" class="w-full bg-amber-500 text-zinc-950 font-extrabold py-3.5 rounded-xl hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/25">Submit</button>
+                <button type="submit" class="w-full bg-zinc-900 border border-zinc-700 text-amber-400 font-bold py-3.5 rounded-xl hover:bg-amber-500 hover:text-zinc-950 transition-all">Send Query</button>
             </form>
         </div>
     </section>
 
-    <!-- Compact Receipt Modal -->
-    <div id="receiptModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div id="receiptBox" class="bg-zinc-900 border border-amber-500/40 rounded-3xl max-w-sm w-full p-6 shadow-2xl relative text-zinc-100">
-            <div class="text-center border-b border-zinc-800 pb-3 mb-3">
-                <span class="text-2xl">🥟</span>
-                <h2 class="text-lg font-black text-amber-500 tracking-wider">slurpin.pk</h2>
-                <p class="text-[10px] text-zinc-400">Order Slip</p>
+    <!-- Floating Cart Bar -->
+    <div id="floatingCart" class="fixed bottom-0 left-0 right-0 bg-zinc-900/95 backdrop-blur-md border-t border-zinc-800 p-4 shadow-2xl z-40 hidden">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div>
+                <p class="text-xs text-zinc-400 font-semibold"><span id="cartCount">0</span> item(s) selected</p>
+                <p class="text-lg font-black text-amber-400">Rs. <span id="cartTotal">0</span></p>
+            </div>
+            <button onclick="openCheckoutModal()" class="bg-amber-500 text-zinc-950 font-extrabold px-6 py-3 rounded-2xl text-xs hover:bg-amber-400 transition shadow-lg shadow-amber-500/20">Proceed to Checkout 🚀</button>
+        </div>
+    </div>
+
+    <!-- Multi-Item Checkout Modal -->
+    <div id="checkoutModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeCheckoutModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-100 text-xl font-bold">&times;</button>
+            <h3 class="text-xl font-bold text-amber-500 mb-2">Complete Your Order</h3>
+            
+            <div class="bg-zinc-950 border border-zinc-800 p-4 rounded-2xl mb-4 text-xs">
+                <p class="font-bold text-zinc-300 mb-2">Selected Items:</p>
+                <div id="checkoutSummaryList" class="space-y-1.5 text-zinc-400"></div>
+                <div class="border-t border-zinc-800 mt-3 pt-2 flex justify-between font-black text-amber-400 text-sm">
+                    <span>Total Bill:</span>
+                    <span>Rs. <span id="checkoutGrandTotal">0</span></span>
+                </div>
             </div>
 
-            <div class="space-y-2 text-xs">
-                <div class="flex justify-between text-zinc-400">
-                    <span>ID: <strong id="recOrderId" class="text-amber-400">#0000</strong></span>
-                    <span id="recDate">15 Oct 2026</span>
+            <form onsubmit="placeOrder(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Full Name</label>
+                    <input type="text" id="custName" required placeholder="Ahmad Khan" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Phone / WhatsApp Number</label>
+                    <input type="text" id="custPhone" required placeholder="03366833202" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Delivery Address (Karachi)</label>
+                    <textarea id="custAddress" required rows="2" placeholder="House #, Street, Area, Karachi" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500"></textarea>
+                </div>
+                
+                <!-- Payment Details Card -->
+                <div class="bg-zinc-950 border border-amber-500/30 p-4 rounded-2xl">
+                    <label class="block text-xs font-bold text-amber-400 mb-1 flex items-center gap-2">
+                        💳 Payment Details
+                    </label>
+                    <p id="dynamicPaymentTitle" class="text-xs font-semibold text-zinc-200 mb-2">Bank Transfer / EasyPaisa / JazzCash</p>
+                    <div id="paymentInstructions" class="p-3 bg-zinc-900 border border-zinc-800 rounded-xl text-[11px] text-zinc-300 whitespace-pre-line font-mono leading-relaxed">
+                        Loading payment details...
+                    </div>
+                    <div id="paymentInstructionMsg" class="mt-3 p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-[11px] text-amber-400 font-semibold">
+                        After payment done send the screenshot on WhatsApp with your order slip.
+                    </div>
                 </div>
 
-                <div class="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80 space-y-1">
+                <button type="submit" class="w-full bg-amber-500 text-zinc-950 font-extrabold py-3.5 rounded-xl hover:bg-amber-400 transition shadow-lg shadow-amber-500/20">Confirm & Place Order</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Receipt Slip Modal -->
+    <div id="receiptModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div id="receiptContentBox" class="bg-zinc-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 shadow-2xl relative text-zinc-100">
+            <div class="text-center border-b border-zinc-800 pb-4 mb-4">
+                <span class="text-2xl">🥟</span>
+                <h2 class="text-xl font-black text-amber-500 tracking-wider">slurpin.pk</h2>
+                <p class="text-[11px] text-zinc-400">Order Confirmation & Official Receipt</p>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div class="flex justify-between text-zinc-400">
+                    <span>Order ID: <strong id="recOrderId" class="text-amber-400">#1001</strong></span>
+                    <span id="recDate">-</span>
+                </div>
+
+                <div class="bg-zinc-950 p-3 rounded-xl border border-zinc-800/80 space-y-1">
                     <p><strong>Customer:</strong> <span id="recCustName">--</span></p>
                     <p><strong>Phone:</strong> <span id="recCustPhone">--</span></p>
                     <p><strong>Address:</strong> <span id="recCustAddress">--</span></p>
                 </div>
 
-                <div class="border-t border-b border-zinc-800 py-2 my-1">
-                    <div class="flex justify-between font-bold text-amber-400 mb-1">
-                        <span>Items Ordered</span>
-                        <span>Qty x Price</span>
-                    </div>
-                    <div id="recItemsList" class="space-y-1 text-zinc-300">
-                        <!-- Rendered items -->
-                    </div>
+                <div class="border-t border-b border-zinc-800 py-2 my-2">
+                    <p class="font-bold text-amber-400 mb-1">Items Ordered:</p>
+                    <div id="recItemsList" class="space-y-1 text-zinc-300"></div>
                 </div>
 
                 <div class="flex justify-between items-center text-sm font-black pt-1">
                     <span>Grand Total:</span>
-                    <span id="recGrandTotal" class="text-amber-400 text-base">Rs. 0</span>
+                    <span id="recGrandTotal" class="text-amber-400 text-lg">Rs. 0</span>
                 </div>
-                <p class="text-[9px] text-emerald-400 text-center font-semibold pt-1">Status: Order Confirmed 🔥</p>
+                <p class="text-[10px] text-emerald-400 text-center font-semibold pt-1">Status: Order Confirmed & Sent to Kitchen 🔥</p>
             </div>
 
-            <div class="mt-5 flex gap-2 no-print">
-                <button onclick="window.print()" class="w-1/2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold py-2 rounded-xl text-xs transition">
+            <div class="mt-6 flex gap-3 no-print">
+                <button onclick="window.print()" class="w-1/2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold py-2.5 rounded-xl text-xs transition">
                     🖨️ Print Slip
                 </button>
-                <button onclick="closeReceiptModal()" class="w-1/2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-extrabold py-2 rounded-xl text-xs transition">
-                    Close
+                <button onclick="closeReceiptModal()" class="w-1/2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-extrabold py-2.5 rounded-xl text-xs transition">
+                    Done
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- Footer -->
     <footer class="bg-zinc-950 border-t border-zinc-800/80 py-8 text-center text-zinc-500 text-xs space-y-2 relative z-10">
-        <p>Contact / WhatsApp: <a href="https://wa.me/923366833202" class="text-amber-400 font-semibold hover:underline">+92 336 6833202</a> | Follow us on <a href="https://instagram.com/slurpin.pk?mdxt=cWhpdXFkMndqamxz" target="_blank" class="text-pink-400 font-semibold hover:underline">Instagram @slurpin.pk</a></p>
+        <p>Contact / WhatsApp: <a href="https://wa.me/923366833202" class="text-amber-400 font-semibold hover:underline">0336-6833202</a> | Follow us on <a href="https://instagram.com/slurpin.pk?mdxt=cWhpdXFkMndqamxz" target="_blank" class="text-pink-400 font-semibold hover:underline">Instagram @slurpin.pk</a></p>
         <p>&copy; 2026 Slurpin.pk. All rights reserved. Made with ❤️ in Karachi.</p>
     </footer>
 
     <script>
         const fallbackImg = 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=800&q=80';
         let menuItems = [];
-        let orderQuantities = {};
+        let cart = {};
+        let siteSettings = {};
 
-        async function loadMenu() {
+        async function loadMenuAndSettings() {
             try {
-                const res = await fetch('/api/menu');
-                const data = await res.json();
-                menuItems = data.menu || [];
-                const container = document.getElementById('dynamic-menu-container');
+                const [menuRes, settingsRes] = await Promise.all([
+                    fetch('/api/menu'),
+                    fetch('/api/settings')
+                ]);
+                const menuData = await menuRes.json();
+                siteSettings = await settingsRes.json();
                 
-                if (menuItems.length === 0) {
-                    container.innerHTML = '<p class="text-zinc-500 text-center col-span-2">No menu items available right now.</p>';
-                    return;
-                }
+                menuItems = menuData.menu || [];
+                renderMenu();
 
-                container.innerHTML = menuItems.map(item => `
-                    <div class="reveal group card-shimmer bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-6 flex flex-col justify-between shadow-2xl hover:border-amber-500/50 hover:-translate-y-2 transition-all duration-500 relative">
-                        ${item.tag ? `<span class="absolute top-4 right-4 bg-amber-500 text-zinc-950 text-[10px] font-black px-2.5 py-1 rounded-full tracking-widest shadow-md uppercase z-20">${item.tag}</span>` : ''}
-                        <div>
-                            <div class="h-52 rounded-xl overflow-hidden mb-5 group-hover:scale-[1.03] transition-transform duration-500 shadow-md bg-zinc-950">
-                                <img src="${item.image}" alt="${item.name}" onerror="this.onerror=null;this.src='${fallbackImg}';" class="w-full h-full object-cover" />
-                            </div>
-                            <h3 class="text-xl font-bold text-zinc-100 group-hover:text-amber-400 transition-colors">${item.name}</h3>
-                            <p class="text-zinc-400 text-sm mt-2 leading-relaxed">${item.description}</p>
+                if (siteSettings.paymentTitle) {
+                    document.getElementById('dynamicPaymentTitle').innerText = siteSettings.paymentTitle;
+                    document.getElementById('paymentInstructions').innerText = siteSettings.paymentDetails;
+                    if (siteSettings.paymentInstruction) {
+                        document.getElementById('paymentInstructionMsg').innerText = siteSettings.paymentInstruction;
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load menu or settings:', err);
+            }
+        }
+
+        function renderMenu() {
+            const container = document.getElementById('dynamic-menu-container');
+            if (menuItems.length === 0) {
+                container.innerHTML = '<p class="text-zinc-500 text-center col-span-2">No menu items available right now.</p>';
+                return;
+            }
+
+            container.innerHTML = menuItems.map(item => `
+                <div class="reveal group card-shimmer bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-6 flex flex-col justify-between shadow-2xl hover:border-amber-500/50 hover:-translate-y-2 transition-all duration-500 relative">
+                    ${item.tag ? `<span class="absolute top-4 right-4 bg-amber-500 text-zinc-950 text-[10px] font-black px-2.5 py-1 rounded-full tracking-widest shadow-md uppercase z-20">${item.tag}</span>` : ''}
+                    <div>
+                        <div class="h-52 rounded-xl overflow-hidden mb-5 group-hover:scale-[1.03] transition-transform duration-500 shadow-md bg-zinc-950">
+                            <img src="${item.image}" alt="${item.name}" onerror="this.onerror=null;this.src='${fallbackImg}';" class="w-full h-full object-cover" />
                         </div>
-                        <div class="flex justify-between items-center mt-8 pt-4 border-t border-zinc-800/80">
-                            <div>
-                                <span class="text-xs text-zinc-500 block">Price</span>
-                                <span class="text-xl font-extrabold text-amber-400">Rs. ${item.price}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <button onclick="changeQty('${item.id}', -1)" class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-base flex items-center justify-center transition">-</button>
-                                <span id="qty-${item.id}" class="text-sm font-extrabold text-zinc-100 min-w-[20px] text-center">0</span>
-                                <button onclick="changeQty('${item.id}', 1)" class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-base flex items-center justify-center transition">+</button>
-                            </div>
+                        <h3 class="text-xl font-bold text-zinc-100 group-hover:text-amber-400 transition-colors">${item.name}</h3>
+                        <p class="text-zinc-400 text-sm mt-2 leading-relaxed">${item.description}</p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-zinc-800/80 flex items-center justify-between">
+                        <div>
+                            <span class="text-xs text-zinc-500 block">Price</span>
+                            <span class="text-xl font-extrabold text-amber-400">Rs. ${item.price}</span>
+                        </div>
+                        <div class="flex items-center gap-2 bg-zinc-950 border border-zinc-800 rounded-xl p-1">
+                            <button onclick="updateCartQty('${item.id}', -1)" class="w-7 h-7 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-sm flex items-center justify-center transition">-</button>
+                            <span id="qty_${item.id}" class="text-xs font-bold text-zinc-100 w-5 text-center">${cart[item.id] || 0}</span>
+                            <button onclick="updateCartQty('${item.id}', 1)" class="w-7 h-7 rounded-lg bg-amber-500 text-zinc-950 font-extrabold text-sm flex items-center justify-center transition hover:bg-amber-400">+</button>
                         </div>
                     </div>
-                `).join('');
-                revealOnScroll();
-            } catch (err) {
-                console.error('Failed to load menu:', err);
-            }
+                </div>
+            `).join('');
+            revealOnScroll();
         }
 
-        function changeQty(id, delta) {
-            let current = orderQuantities[id] || 0;
-            let updated = current + delta;
-            if (updated < 0) updated = 0;
-            if (updated === 0) {
-                delete orderQuantities[id];
-            } else {
-                orderQuantities[id] = updated;
-            }
-            const badge = document.getElementById(`qty-${id}`);
-            if (badge) badge.innerText = updated;
-            updateFloatingBar();
+        function updateCartQty(id, change) {
+            cart[id] = (cart[id] || 0) + change;
+            if (cart[id] <= 0) delete cart[id];
+            
+            document.getElementById(`qty_${id}`).innerText = cart[id] || 0;
+            updateFloatingCartBar();
         }
 
-        function updateFloatingBar() {
-            let totalPlates = 0;
+        function updateFloatingCartBar() {
+            let totalQty = 0;
             let totalPrice = 0;
 
-            for (const [id, qty] of Object.entries(orderQuantities)) {
+            for (const [id, qty] of Object.entries(cart)) {
                 const item = menuItems.find(i => i.id === id);
                 if (item) {
-                    totalPlates += qty;
+                    totalQty += qty;
                     totalPrice += item.price * qty;
                 }
             }
 
-            document.getElementById('selectedCount').innerText = `${totalPlates} plates`;
-            document.getElementById('floatingTotalPrice').innerText = `Rs. ${totalPrice.toLocaleString()}`;
+            document.getElementById('cartCount').innerText = totalQty;
+            document.getElementById('cartTotal').innerText = totalPrice.toLocaleString();
 
-            const btn = document.getElementById('checkoutBtn');
-            if (totalPlates > 0) {
-                btn.disabled = false;
-                btn.classList.remove('bg-zinc-800', 'text-zinc-500', 'cursor-not-allowed');
-                btn.classList.add('bg-amber-500', 'text-zinc-950', 'hover:bg-amber-400');
+            const bar = document.getElementById('floatingCart');
+            if (totalQty > 0) {
+                bar.classList.remove('hidden');
             } else {
-                btn.disabled = true;
-                btn.classList.add('bg-zinc-800', 'text-zinc-500', 'cursor-not-allowed');
-                btn.classList.remove('bg-amber-500', 'text-zinc-950', 'hover:bg-amber-400');
+                bar.classList.add('hidden');
             }
         }
 
         function openCheckoutModal() {
-            const listContainer = document.getElementById('modalSelectedList');
-            let html = '';
+            let itemsHtml = '';
             let grandTotal = 0;
 
-            for (const [id, qty] of Object.entries(orderQuantities)) {
+            for (const [id, qty] of Object.entries(cart)) {
                 const item = menuItems.find(i => i.id === id);
                 if (item) {
                     const subtotal = item.price * qty;
                     grandTotal += subtotal;
-                    html += `
-                        <div class="flex justify-between items-center py-1 border-b border-zinc-800/60">
-                            <div>
-                                <span class="font-bold text-zinc-100">${item.name}</span>
-                                <span class="text-zinc-400 block text-[10px]">Qty: ${qty} x Rs. ${item.price}</span>
-                            </div>
-                            <span class="font-extrabold text-amber-400">Rs. ${subtotal.toLocaleString()}</span>
-                        </div>
-                    `;
+                    itemsHtml += `<div class="flex justify-between">
+                        <span>${item.name} (x${qty})</span>
+                        <span class="text-amber-400 font-bold">Rs. ${subtotal.toLocaleString()}</span>
+                    </div>`;
                 }
             }
 
-            listContainer.innerHTML = html;
-            document.getElementById('modalGrandTotal').innerText = `Rs. ${grandTotal.toLocaleString()}`;
+            document.getElementById('checkoutSummaryList').innerHTML = itemsHtml;
+            document.getElementById('checkoutGrandTotal').innerText = grandTotal.toLocaleString();
             document.getElementById('checkoutModal').classList.remove('hidden');
         }
 
@@ -396,33 +427,35 @@
             document.getElementById('checkoutModal').classList.add('hidden');
         }
 
-        function closeReceiptModal() {
-            document.getElementById('receiptModal').classList.add('hidden');
-        }
-
-        async function submitOrder(e) {
+        async function placeOrder(e) {
             e.preventDefault();
             const custName = document.getElementById('custName').value;
             const custPhone = document.getElementById('custPhone').value;
             const custAddress = document.getElementById('custAddress').value;
 
-            let orderedItemsArray = [];
-            let grandTotal = 0;
+            let items = [];
+            let totalAmount = 0;
 
-            for (const [id, qty] of Object.entries(orderQuantities)) {
+            for (const [id, qty] of Object.entries(cart)) {
                 const item = menuItems.find(i => i.id === id);
                 if (item) {
-                    orderedItemsArray.push({ name: item.name, quantity: qty, price: item.price });
-                    grandTotal += item.price * qty;
+                    items.push({ id: item.id, name: item.name, price: item.price, quantity: qty });
+                    totalAmount += item.price * qty;
                 }
+            }
+
+            if (items.length === 0) {
+                alert('Please select at least one item.');
+                return;
             }
 
             const orderData = {
                 customerName: custName,
                 phone: custPhone,
                 address: custAddress,
-                items: orderedItemsArray,
-                totalAmount: grandTotal
+                items: items,
+                totalAmount: totalAmount,
+                paymentMethod: siteSettings.paymentTitle || 'Online Payment'
             };
 
             try {
@@ -434,31 +467,36 @@
                 const data = await res.json();
                 if (data.success) {
                     closeCheckoutModal();
-                    document.getElementById('orderForm').reset();
-
+                    
                     document.getElementById('recOrderId').innerText = `#${data.order.id}`;
-                    document.getElementById('recDate').innerText = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                    document.getElementById('recDate').innerText = data.order.createdAt || new Date().toLocaleString();
                     document.getElementById('recCustName').innerText = custName;
                     document.getElementById('recCustPhone').innerText = custPhone;
                     document.getElementById('recCustAddress').innerText = custAddress;
-                    document.getElementById('recGrandTotal').innerText = `Rs. ${grandTotal.toLocaleString()}`;
+                    document.getElementById('recGrandTotal').innerText = `Rs. ${totalAmount.toLocaleString()}`;
 
-                    document.getElementById('recItemsList').innerHTML = orderedItemsArray.map(i => `
+                    document.getElementById('recItemsList').innerHTML = items.map(i => `
                         <div class="flex justify-between">
-                            <span>${i.name}</span>
-                            <span>${i.quantity} x Rs. ${i.price}</span>
+                            <span>${i.name} (x${i.quantity})</span>
+                            <span>Rs. ${(i.price * i.quantity).toLocaleString()}</span>
                         </div>
                     `).join('');
 
                     document.getElementById('receiptModal').classList.remove('hidden');
 
-                    setTimeout(() => {
-                        window.print();
-                    }, 500);
+                    cart = {};
+                    updateFloatingCartBar();
+                    renderMenu();
+                } else {
+                    alert('Failed to place order.');
                 }
             } catch (err) {
-                alert('Failed to place order.');
+                alert('Error connecting to server.');
             }
+        }
+
+        function closeReceiptModal() {
+            document.getElementById('receiptModal').classList.add('hidden');
         }
 
         async function submitQuery(e) {
@@ -468,17 +506,18 @@
             const message = document.getElementById('queryMessage').value;
 
             try {
-                await fetch('/api/queries', {
+                const res = await fetch('/api/queries', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, phone, message })
                 });
-                alert('✅ Query submitted successfully! It has been logged in the admin panel.');
-                document.getElementById('queryName').value = '';
-                document.getElementById('queryPhone').value = '';
-                document.getElementById('queryMessage').value = '';
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ Query submitted successfully!');
+                    e.target.reset();
+                }
             } catch (err) {
-                alert('Failed to submit query.');
+                alert('Error submitting query.');
             }
         }
 
@@ -492,8 +531,9 @@
                 }
             });
         }
+
         window.addEventListener('scroll', revealOnScroll);
-        window.addEventListener('load', loadMenu);
+        window.addEventListener('load', loadMenuAndSettings);
     </script>
 </body>
 </html>

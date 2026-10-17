@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Orders - Slurpin.pk Admin</title>
+    <title>Live Orders - Slurpin Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-zinc-950 text-zinc-100 font-sans min-h-screen">
@@ -11,7 +11,7 @@
     <nav class="bg-zinc-900 border-b border-zinc-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
         <div class="flex items-center gap-3">
             <span class="text-2xl">🥟</span>
-            <span class="font-extrabold text-lg text-amber-500">Slurpin.pk Admin</span>
+            <span class="font-extrabold text-lg text-amber-500">Slurpin Admin</span>
         </div>
         <div class="flex items-center gap-4 text-xs font-semibold">
             <a href="/" target="_blank" class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-lg hover:bg-amber-500 hover:text-zinc-950 transition">🏠 View Website</a>
@@ -19,39 +19,34 @@
             <a href="/admin/menu" class="text-zinc-300 hover:text-amber-400 transition">Menu Manager</a>
             <a href="/admin/queries" class="text-zinc-300 hover:text-amber-400 transition">Customer Queries</a>
             <a href="/admin/sales" class="text-zinc-300 hover:text-amber-400 transition">Sales Report</a>
+            <a href="/admin/settings" class="text-zinc-300 hover:text-amber-400 transition">Payment Settings</a>
             <button onclick="logout()" class="bg-red-500/10 text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-500 hover:text-white transition">Logout</button>
         </div>
     </nav>
 
-    <main class="max-w-6xl mx-auto p-6 mt-6">
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h1 class="text-2xl font-black text-amber-500">Live Order Tracking</h1>
-                <p class="text-xs text-zinc-400 mt-1">Manage incoming orders and dispatch WhatsApp confirmations.</p>
-            </div>
+    <main class="max-w-7xl mx-auto p-6">
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold text-amber-500">Live Order Tracking</h1>
+            <p class="text-xs text-zinc-400 mt-1">Manage incoming orders, view exact time stamps, and dispatch WhatsApp confirmations.</p>
         </div>
 
-        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
-                    <thead>
-                        <tr class="bg-zinc-950 border-b border-zinc-800 text-zinc-400 uppercase tracking-wider">
-                            <th class="p-4">Order ID</th>
-                            <th class="p-4">Customer</th>
-                            <th class="p-4">Phone</th>
-                            <th class="p-4">Address</th>
-                            <th class="p-4">Items & Total</th>
-                            <th class="p-4">Status</th>
-                            <th class="p-4 text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ordersTableBody" class="divide-y divide-zinc-800/80">
-                        <tr>
-                            <td colspan="7" class="p-6 text-center text-zinc-500">Loading orders...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-zinc-950 text-zinc-400 uppercase border-b border-zinc-800">
+                    <tr>
+                        <th class="p-4">Order ID & Time</th>
+                        <th class="p-4">Customer</th>
+                        <th class="p-4">Phone</th>
+                        <th class="p-4">Address</th>
+                        <th class="p-4">Items & Total</th>
+                        <th class="p-4">Status</th>
+                        <th class="p-4 text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTable" class="divide-y divide-zinc-800 text-zinc-300">
+                    <tr><td colspan="7" class="p-6 text-center text-zinc-500">Loading orders...</td></tr>
+                </tbody>
+            </table>
         </div>
     </main>
 
@@ -64,39 +59,50 @@
                 const res = await fetch('/api/admin/orders', {
                     headers: { 'x-admin-token': token }
                 });
-                if (res.status === 401) { logout(); return; }
                 const data = await res.json();
-                const tbody = document.getElementById('ordersTableBody');
-
-                if (!data.orders || data.orders.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-zinc-500">No orders received yet.</td></tr>';
-                    return;
-                }
-
-                tbody.innerHTML = data.orders.map(o => `
-                    <tr class="hover:bg-zinc-800/40 transition">
-                        <td class="p-4 font-bold text-amber-400">#${o.id}</td>
-                        <td class="p-4 font-bold text-zinc-100">${o.customerName}</td>
-                        <td class="p-4 text-zinc-300">${o.phone}</td>
-                        <td class="p-4 text-zinc-400 max-w-xs truncate">${o.address}</td>
-                        <td class="p-4 text-zinc-300">
-                            ${o.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}<br/>
-                            <strong class="text-amber-400">Rs. ${o.totalAmount}</strong>
-                        </td>
-                        <td class="p-4">
-                            <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${o.status === 'Delivered' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'}">
-                                ${o.status}
-                            </span>
-                        </td>
-                        <td class="p-4 text-right flex items-center justify-end gap-2">
-                            ${o.status !== 'Delivered' ? `<button onclick="markDelivered('${o.id}')" class="bg-amber-500 text-zinc-950 px-3 py-1.5 rounded-lg font-bold hover:bg-amber-400 transition shadow-md">Mark Delivered & WhatsApp</button>` : '<span class="text-emerald-400 font-bold">Completed</span>'}
-                            <button onclick="deleteOrder('${o.id}')" class="bg-red-500/10 text-red-400 border border-red-500/30 px-2.5 py-1.5 rounded-lg font-bold hover:bg-red-500 hover:text-white transition" title="Delete Order">🗑️</button>
-                        </td>
-                    </tr>
-                `).join('');
+                renderOrders(data.orders || []);
             } catch (err) {
                 console.error('Failed to load orders');
             }
+        }
+
+        function renderOrders(orders) {
+            const container = document.getElementById('ordersTable');
+            if (orders.length === 0) {
+                container.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-zinc-500">No orders placed yet.</td></tr>';
+                return;
+            }
+
+            container.innerHTML = orders.map(o => `
+                <tr class="hover:bg-zinc-950/50 transition">
+                    <td class="p-4">
+                        <span class="font-extrabold text-amber-400 text-sm block">#${o.id}</span>
+                        <span class="text-[10px] text-zinc-400">${o.createdAt || 'Just now'}</span>
+                    </td>
+                    <td class="p-4 font-semibold text-zinc-200">${o.customerName}</td>
+                    <td class="p-4 text-zinc-400">${o.phone}</td>
+                    <td class="p-4 text-zinc-400 max-w-[180px] truncate">${o.address}</td>
+                    <td class="p-4">
+                        <div class="space-y-0.5 text-zinc-300">
+                            ${o.items.map(i => `<div>${i.name} (x${i.quantity})</div>`).join('')}
+                        </div>
+                        <div class="text-amber-400 font-extrabold mt-1">Rs. ${o.totalAmount.toLocaleString()}</div>
+                    </td>
+                    <td class="p-4">
+                        ${o.status === 'Delivered' 
+                            ? '<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded-full text-[10px] font-extrabold">DELIVERED</span>' 
+                            : '<span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-full text-[10px] font-extrabold">PENDING</span>'}
+                    </td>
+                    <td class="p-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            ${o.status !== 'Delivered' 
+                                ? `<button onclick="markDelivered('${o.id}')" class="bg-emerald-500 text-zinc-950 px-3 py-1.5 rounded-xl font-bold text-[11px] hover:bg-emerald-400 transition shadow">Mark Delivered</button>`
+                                : `<span class="text-zinc-500 text-[11px] font-semibold">Completed</span>`}
+                            <button onclick="deleteOrder('${o.id}')" class="bg-red-500/10 text-red-400 border border-red-500/30 p-1.5 rounded-xl hover:bg-red-500 hover:text-white transition" title="Delete Order">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
         }
 
         async function markDelivered(id) {
@@ -107,17 +113,21 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    alert('✅ Order marked as Delivered!');
-                    if(data.whatsappUrl) window.open(data.whatsappUrl, '_blank');
+                    if (data.whatsappUrl) {
+                        window.open(data.whatsappUrl, '_blank');
+                    }
                     fetchOrders();
+                } else {
+                    alert('Failed to update order status.');
                 }
             } catch (err) {
-                alert('Failed to update order status');
+                alert('Error connecting to server.');
             }
         }
 
         async function deleteOrder(id) {
             if (!confirm(`Are you sure you want to delete order #${id}?`)) return;
+
             try {
                 const res = await fetch(`/api/admin/orders/${id}`, {
                     method: 'DELETE',
@@ -125,13 +135,12 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    alert('🗑️ Order deleted successfully!');
                     fetchOrders();
                 } else {
-                    alert(data.message || 'Failed to delete order');
+                    alert('Failed to delete order.');
                 }
             } catch (err) {
-                alert('Failed to delete order');
+                alert('Error deleting order.');
             }
         }
 
@@ -141,7 +150,6 @@
         }
 
         window.addEventListener('load', fetchOrders);
-        setInterval(fetchOrders, 5000);
     </script>
 </body>
 </html>

@@ -1,0 +1,98 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Settings - Slurpin.pk Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-zinc-950 text-zinc-100 font-sans min-h-screen">
+
+    <nav class="bg-zinc-900 border-b border-zinc-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">🥟</span>
+            <span class="font-extrabold text-lg text-amber-500">Slurpin.pk Admin</span>
+        </div>
+        <div class="flex items-center gap-4 text-xs font-semibold">
+            <a href="/" target="_blank" class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-lg hover:bg-amber-500 hover:text-zinc-950 transition">🏠 View Website</a>
+            <a href="/admin" class="text-zinc-300 hover:text-amber-400 transition">Live Orders</a>
+            <a href="/admin/menu" class="text-zinc-300 hover:text-amber-400 transition">Menu Manager</a>
+            <a href="/admin/queries" class="text-zinc-300 hover:text-amber-400 transition">Customer Queries</a>
+            <a href="/admin/sales" class="text-zinc-300 hover:text-amber-400 transition">Sales Report</a>
+            <a href="/admin/settings" class="text-amber-400 border-b-2 border-amber-500 pb-0.5">Payment Settings</a>
+            <button onclick="logout()" class="bg-red-500/10 text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-500 hover:text-white transition">Logout</button>
+        </div>
+    </nav>
+
+    <main class="max-w-xl mx-auto p-6 mt-10">
+        <div class="bg-zinc-900 border border-zinc-800 p-8 rounded-3xl shadow-xl">
+            <h1 class="text-xl font-bold text-amber-500 mb-2">Payment Method Settings</h1>
+            <p class="text-xs text-zinc-400 mb-6">Edit account title, account numbers, and post-payment WhatsApp instructions shown to customers during checkout.</p>
+
+            <form onsubmit="saveSettings(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Payment Section Title</label>
+                    <input type="text" id="paymentTitle" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-xs text-zinc-100 focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Account Title, Numbers & Details</label>
+                    <textarea id="paymentDetails" required rows="5" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-xs text-zinc-100 focus:outline-none focus:border-amber-500 font-mono"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Post-Payment Instruction (WhatsApp Message)</label>
+                    <textarea id="paymentInstruction" required rows="2" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-xs text-zinc-100 focus:outline-none focus:border-amber-500"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-amber-500 text-zinc-950 font-extrabold py-3 rounded-xl text-xs hover:bg-amber-400 transition shadow-lg">Save Settings</button>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        const token = localStorage.getItem('slurpin_admin_token');
+        if (!token) window.location.href = '/admin/login';
+
+        async function fetchSettings() {
+            try {
+                const res = await fetch('/api/admin/settings', {
+                    headers: { 'x-admin-token': token }
+                });
+                const data = await res.json();
+                document.getElementById('paymentTitle').value = data.paymentTitle || 'Bank Transfer / EasyPaisa / JazzCash';
+                document.getElementById('paymentDetails').value = data.paymentDetails || 'Account Title: Slurpin.pk\nAccount Number: 0336-6833202\nBank: Meezan Bank';
+                document.getElementById('paymentInstruction').value = data.paymentInstruction || 'After payment done send the screenshot on WhatsApp with your order slip.';
+            } catch (err) {
+                console.error('Failed to load settings');
+            }
+        }
+
+        async function saveSettings(e) {
+            e.preventDefault();
+            const paymentTitle = document.getElementById('paymentTitle').value;
+            const paymentDetails = document.getElementById('paymentDetails').value;
+            const paymentInstruction = document.getElementById('paymentInstruction').value;
+
+            const res = await fetch('/api/admin/settings', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-admin-token': token 
+                },
+                body: JSON.stringify({ paymentTitle, paymentDetails, paymentInstruction })
+            });
+
+            if (res.ok) {
+                alert('✅ Payment details updated successfully!');
+            } else {
+                alert('Failed to update settings.');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('slurpin_admin_token');
+            window.location.href = '/admin/login';
+        }
+
+        window.addEventListener('load', fetchSettings);
+    </script>
+</body>
+</html>

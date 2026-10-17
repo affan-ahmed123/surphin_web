@@ -25,6 +25,7 @@ if (!fs.existsSync(DATA_DIR)) {
 const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
 const MENU_FILE = path.join(DATA_DIR, 'menu.json');
 const QUERIES_FILE = path.join(DATA_DIR, 'queries.json');
+const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 
 function readJSON(file, defaultVal) {
     if (!fs.existsSync(file)) return defaultVal;
@@ -46,6 +47,16 @@ if (!fs.existsSync(MENU_FILE)) {
     ]);
 }
 
+const defaultSettings = {
+    paymentTitle: 'Bank Transfer / EasyPaisa / JazzCash',
+    paymentDetails: 'Account Title: Slurpin\nAccount Number: 0336-6833202\nBank: Meezan Bank',
+    paymentInstruction: 'After payment done send the screenshot on WhatsApp with your order slip.'
+};
+
+if (!fs.existsSync(SETTINGS_FILE)) {
+    writeJSON(SETTINGS_FILE, defaultSettings);
+}
+
 let otpStore = {};
 
 // --- PUBLIC API ROUTES ---
@@ -55,8 +66,13 @@ app.get('/api/menu', (req, res) => {
     res.json({ menu });
 });
 
+app.get('/api/settings', (req, res) => {
+    const settings = readJSON(SETTINGS_FILE, defaultSettings);
+    res.json(settings);
+});
+
 app.post('/api/orders', (req, res) => {
-    const { customerName, phone, address, items, totalAmount } = req.body;
+    const { customerName, phone, address, items, totalAmount, paymentMethod } = req.body;
     const orders = readJSON(ORDERS_FILE, []);
     
     const nextNum = 1000 + orders.length + 1;
@@ -69,8 +85,9 @@ app.post('/api/orders', (req, res) => {
         address,
         items,
         totalAmount,
+        paymentMethod: paymentMethod || 'Online Payment',
         status: 'Pending',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toLocaleString('en-US', { timeZone: 'Asia/Karachi' })
     };
     orders.unshift(newOrder);
     writeJSON(ORDERS_FILE, orders);
@@ -85,7 +102,7 @@ app.post('/api/queries', (req, res) => {
         name,
         phone,
         message,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toLocaleString('en-US', { timeZone: 'Asia/Karachi' })
     };
     queries.unshift(newQuery);
     writeJSON(QUERIES_FILE, queries);
@@ -112,12 +129,11 @@ app.post('/api/admin/forgot-password', (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otpStore[ADMIN_RECOVERY_PHONE] = otp;
     
-    // Console log for instant local debugging
     console.log(`\n========================================`);
     console.log(`🔑 ADMIN PASSWORD RECOVERY OTP: ${otp}`);
     console.log(`========================================\n`);
 
-    const msg = `Your Slurpin.pk Admin Password Recovery OTP is: *${otp}*`;
+    const msg = `Your Slurpin Admin Password Recovery OTP is: *${otp}*`;
     const whatsappUrl = `https://wa.me/92${ADMIN_RECOVERY_PHONE.slice(1)}?text=${encodeURIComponent(msg)}`;
     
     res.json({ success: true, message: 'OTP generated', whatsappUrl });
@@ -159,8 +175,8 @@ app.patch('/api/admin/orders/:id/deliver', verifyAdmin, (req, res) => {
 
     const cleanPhone = order.phone.replace(/[^0-9]/g, '');
     const custPhoneFormatted = cleanPhone.startsWith('03') ? '92' + cleanPhone.slice(1) : cleanPhone;
-    const deliveryMsg = `Hi ${order.customerName}, your Slurpin.pk order #${order.id} has been delivered! Thank you for ordering with us. 🥟🔥`;
     
+    const deliveryMsg = `Hi ${order.customerName}, your Slurpin order #${order.id} has been delivered! Thank you. 🥟`;
     const whatsappUrl = `https://wa.me/${custPhoneFormatted}?text=${encodeURIComponent(deliveryMsg)}`;
 
     res.json({ success: true, whatsappUrl });
@@ -182,6 +198,17 @@ app.get('/api/admin/queries', verifyAdmin, (req, res) => {
     res.json({ queries });
 });
 
+app.delete('/api/admin/queries/:id', verifyAdmin, (req, res) => {
+    let queries = readJSON(QUERIES_FILE, []);
+    const exists = queries.some(q => q.id === req.params.id);
+    if (!exists) {
+        return res.status(404).json({ success: false, message: 'Query not found' });
+    }
+    queries = queries.filter(q => q.id !== req.params.id);
+    writeJSON(QUERIES_FILE, queries);
+    res.json({ success: true, message: 'Query deleted successfully' });
+});
+
 app.get('/api/admin/sales-report', verifyAdmin, (req, res) => {
     const orders = readJSON(ORDERS_FILE, []);
     const deliveredOrders = orders.filter(o => o.status === 'Delivered');
@@ -201,8 +228,21 @@ app.get('/api/admin/sales-report', verifyAdmin, (req, res) => {
     res.json({
         overallRevenue,
         overallDeliveredOrders: deliveredOrders.length,
-        monthlyReport: Object.values(monthlyMap)
+        monthlyReport: Object.values(monthlyMap),
+        deliveredOrdersList: deliveredOrders
     });
+});
+
+app.get('/api/admin/settings', verifyAdmin, (req, res) => {
+    const settings = readJSON(SETTINGS_FILE, defaultSettings);
+    res.json(settings);
+});
+
+app.post('/api/admin/settings', verifyAdmin, (req, res) => {
+    const { paymentTitle, paymentDetails, paymentInstruction } = req.body;
+    const settings = { paymentTitle, paymentDetails, paymentInstruction };
+    writeJSON(SETTINGS_FILE, settings);
+    res.json({ success: true, settings });
 });
 
 app.post('/api/admin/menu', verifyAdmin, (req, res) => {
@@ -244,8 +284,9 @@ app.get('/admin/login', (req, res) => res.sendFile(path.join(__dirname, 'public/
 app.get('/admin/menu', (req, res) => res.sendFile(path.join(__dirname, 'public/admin-menu.html')));
 app.get('/admin/queries', (req, res) => res.sendFile(path.join(__dirname, 'public/admin-queries.html')));
 app.get('/admin/sales', (req, res) => res.sendFile(path.join(__dirname, 'public/admin-sales.html')));
+app.get('/admin/settings', (req, res) => res.sendFile(path.join(__dirname, 'public/admin-settings.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public/admin-orders.html')));
 
 app.listen(PORT, () => {
-    console.log(`Slurpin.pk server running on http://localhost:${PORT}`);
+    console.log(`Slurpin server running on http://localhost:${PORT}`);
 });

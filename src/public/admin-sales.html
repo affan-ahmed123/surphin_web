@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Report - Slurpin.pk Admin</title>
+    <title>Sales Analytics - Slurpin Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body class="bg-zinc-950 text-zinc-100 font-sans min-h-screen">
 
     <nav class="bg-zinc-900 border-b border-zinc-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
         <div class="flex items-center gap-3">
             <span class="text-2xl">🥟</span>
-            <span class="font-extrabold text-lg text-amber-500">Slurpin.pk Admin</span>
+            <span class="font-extrabold text-lg text-amber-500">Slurpin Admin</span>
         </div>
         <div class="flex items-center gap-4 text-xs font-semibold">
             <a href="/" target="_blank" class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-lg hover:bg-amber-500 hover:text-zinc-950 transition">🏠 View Website</a>
@@ -19,63 +21,182 @@
             <a href="/admin/menu" class="text-zinc-300 hover:text-amber-400 transition">Menu Manager</a>
             <a href="/admin/queries" class="text-zinc-300 hover:text-amber-400 transition">Customer Queries</a>
             <a href="/admin/sales" class="text-amber-400 border-b-2 border-amber-500 pb-0.5">Sales Report</a>
+            <a href="/admin/settings" class="text-zinc-300 hover:text-amber-400 transition">Payment Settings</a>
             <button onclick="logout()" class="bg-red-500/10 text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-500 hover:text-white transition">Logout</button>
         </div>
     </nav>
 
-    <main class="max-w-4xl mx-auto p-6 mt-6">
-        <h1 class="text-2xl font-black text-amber-500 mb-6">Monthly Sales Analytics</h1>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-xl">
-                <p class="text-xs text-zinc-400 uppercase font-bold">Total Delivered Revenue</p>
-                <h3 id="totalRev" class="text-3xl font-black text-amber-400 mt-2">Rs. 0</h3>
+    <main class="max-w-6xl mx-auto p-6">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-amber-500">Sales & Revenue Analytics</h1>
+                <p class="text-xs text-zinc-400 mt-1">Track delivered orders, monthly earnings, and overall performance.</p>
             </div>
-            <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-xl">
-                <p class="text-xs text-zinc-400 uppercase font-bold">Total Delivered Orders</p>
-                <h3 id="totalOrders" class="text-3xl font-black text-emerald-400 mt-2">0</h3>
+            <button onclick="downloadSalesPDF()" class="bg-amber-500 text-zinc-950 px-5 py-2.5 rounded-xl font-black text-xs hover:bg-amber-400 transition shadow-lg shadow-amber-500/20 flex items-center gap-2">
+                📄 Download PDF Report
+            </button>
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-3xl shadow-xl flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Overall Revenue</span>
+                    <h2 class="text-3xl font-black text-amber-400 mt-1">Rs. <span id="overallRev">0</span></h2>
+                </div>
+                <div class="w-12 h-12 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-center text-xl">💰</div>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-3xl shadow-xl flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Delivered Orders</span>
+                    <h2 class="text-3xl font-black text-emerald-400 mt-1"><span id="overallOrders">0</span></h2>
+                </div>
+                <div class="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center justify-center text-xl">📦</div>
             </div>
         </div>
 
-        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl">
-            <h3 class="text-lg font-bold text-zinc-100 mb-4">Monthly Breakdown</h3>
-            <div id="monthlyList" class="space-y-3">
-                <p class="text-zinc-500 text-xs">Loading analytics...</p>
+        <!-- Monthly Breakdown -->
+        <section class="mb-10">
+            <h3 class="text-lg font-bold text-zinc-200 mb-4">Monthly Revenue Summary</h3>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-zinc-950 text-zinc-400 uppercase border-b border-zinc-800">
+                        <tr>
+                            <th class="p-4">Month & Year</th>
+                            <th class="p-4">Delivered Orders</th>
+                            <th class="p-4 text-right">Total Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monthlyTable" class="divide-y divide-zinc-800 text-zinc-300">
+                        <tr><td colspan="3" class="p-4 text-center text-zinc-500">Loading data...</td></tr>
+                    </tbody>
+                </table>
             </div>
-        </div>
+        </section>
+
+        <!-- Detailed Delivered Orders Table -->
+        <section>
+            <h3 class="text-lg font-bold text-zinc-200 mb-4">Detailed Daily Orders Log</h3>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-zinc-950 text-zinc-400 uppercase border-b border-zinc-800">
+                        <tr>
+                            <th class="p-4">Order ID</th>
+                            <th class="p-4">Date & Time</th>
+                            <th class="p-4">Customer</th>
+                            <th class="p-4">Phone</th>
+                            <th class="p-4">Items</th>
+                            <th class="p-4 text-right">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dailyOrdersTable" class="divide-y divide-zinc-800 text-zinc-300">
+                        <tr><td colspan="6" class="p-4 text-center text-zinc-500">Loading data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </main>
 
     <script>
         const token = localStorage.getItem('slurpin_admin_token');
         if (!token) window.location.href = '/admin/login';
 
-        async function fetchSales() {
+        let salesReportData = null;
+
+        async function fetchSalesReport() {
             try {
                 const res = await fetch('/api/admin/sales-report', {
                     headers: { 'x-admin-token': token }
                 });
-                if (res.status === 401) { logout(); return; }
-                const data = await res.json();
-
-                document.getElementById('totalRev').innerText = `Rs. ${data.overallRevenue.toLocaleString()}`;
-                document.getElementById('totalOrders').innerText = data.overallDeliveredOrders;
-
-                const list = document.getElementById('monthlyList');
-                if (!data.monthlyReport || data.monthlyReport.length === 0) {
-                    list.innerHTML = '<p class="text-zinc-500 text-xs">No delivered orders for reports yet.</p>';
-                    return;
-                }
-
-                list.innerHTML = data.monthlyReport.map(m => `
-                    <div class="bg-zinc-950 border border-zinc-800 p-4 rounded-xl flex justify-between items-center text-xs">
-                        <span class="font-bold text-zinc-300">${m.month}</span>
-                        <span class="text-zinc-400">Orders: <strong class="text-zinc-200">${m.totalOrders}</strong></span>
-                        <span class="text-amber-400 font-extrabold text-sm">Rs. ${m.totalRevenue.toLocaleString()}</span>
-                    </div>
-                `).join('');
+                salesReportData = await res.json();
+                renderSalesData(salesReportData);
             } catch (err) {
-                console.error('Failed to load sales');
+                console.error('Failed to load sales report');
             }
+        }
+
+        function renderSalesData(data) {
+            document.getElementById('overallRev').innerText = (data.overallRevenue || 0).toLocaleString();
+            document.getElementById('overallOrders').innerText = data.overallDeliveredOrders || 0;
+
+            const monthlyContainer = document.getElementById('monthlyTable');
+            if (!data.monthlyReport || data.monthlyReport.length === 0) {
+                monthlyContainer.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-zinc-500">No monthly sales data recorded yet.</td></tr>';
+            } else {
+                monthlyContainer.innerHTML = data.monthlyReport.map(m => `
+                    <tr class="hover:bg-zinc-950/50 transition">
+                        <td class="p-4 font-bold text-amber-400">${m.month}</td>
+                        <td class="p-4">${m.totalOrders} orders</td>
+                        <td class="p-4 text-right font-extrabold text-emerald-400">Rs. ${m.totalRevenue.toLocaleString()}</td>
+                    </tr>
+                `).join('');
+            }
+
+            const dailyContainer = document.getElementById('dailyOrdersTable');
+            if (!data.deliveredOrdersList || data.deliveredOrdersList.length === 0) {
+                dailyContainer.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-zinc-500">No delivered orders found.</td></tr>';
+            } else {
+                dailyContainer.innerHTML = data.deliveredOrdersList.map(o => `
+                    <tr class="hover:bg-zinc-950/50 transition">
+                        <td class="p-4 font-extrabold text-amber-400">#${o.id}</td>
+                        <td class="p-4 text-zinc-400">${o.createdAt}</td>
+                        <td class="p-4 font-semibold text-zinc-200">${o.customerName}</td>
+                        <td class="p-4 text-zinc-400">${o.phone}</td>
+                        <td class="p-4 text-zinc-300">${o.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}</td>
+                        <td class="p-4 text-right font-black text-emerald-400">Rs. ${o.totalAmount.toLocaleString()}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function downloadSalesPDF() {
+            if (!salesReportData || !salesReportData.deliveredOrdersList) {
+                alert('Sales data is not ready to export.');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // PDF Header
+            doc.setFontSize(18);
+            doc.setTextColor(245, 158, 11);
+            doc.text('SLURPIN - SALES REPORT', 14, 20);
+
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Generated Date: ${new Date().toLocaleString()}`, 14, 27);
+            doc.text(`Total Delivered Orders: ${salesReportData.overallDeliveredOrders}`, 14, 33);
+            doc.text(`Total Revenue: Rs. ${salesReportData.overallRevenue.toLocaleString()}`, 14, 39);
+
+            // Detailed Daily Orders Table
+            const tableRows = salesReportData.deliveredOrdersList.map(o => [
+                `#${o.id}`,
+                o.createdAt,
+                o.customerName,
+                o.phone,
+                o.items.map(i => `${i.name} (x${i.quantity})`).join(', '),
+                `Rs. ${o.totalAmount.toLocaleString()}`
+            ]);
+
+            doc.autoTable({
+                startY: 46,
+                head: [['Order ID', 'Date & Time', 'Customer', 'Phone', 'Items', 'Amount']],
+                body: tableRows,
+                headStyles: { fillColor: [245, 158, 11], textColor: [15, 15, 15], fontStyle: 'bold' },
+                alternateRowStyles: { fillColor: [245, 245, 245] },
+                styles: { fontSize: 8, cellPadding: 3 },
+                columnStyles: {
+                    0: { cellWidth: 20 },
+                    1: { cellWidth: 35 },
+                    2: { cellWidth: 30 },
+                    3: { cellWidth: 28 },
+                    4: { cellWidth: 50 },
+                    5: { cellWidth: 25, halign: 'right' }
+                }
+            });
+
+            doc.save(`Slurpin_Sales_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
         }
 
         function logout() {
@@ -83,7 +204,7 @@
             window.location.href = '/admin/login';
         }
 
-        window.addEventListener('load', fetchSales);
+        window.addEventListener('load', fetchSalesReport);
     </script>
 </body>
 </html>
