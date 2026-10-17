@@ -3,6 +3,9 @@ import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,8 +13,9 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const ADMIN_RECOVERY_PHONE = '03032781433';
-const BUSINESS_WHATSAPP_PHONE = '03366833202';
+const ADMIN_RECOVERY_PHONE = process.env.ADMIN_RECOVERY_PHONE || '03032781433';
+const BUSINESS_WHATSAPP_PHONE = process.env.BUSINESS_WHATSAPP_PHONE || '03366833202';
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'slurpin_secure_token_abc987';
 
 app.use(cors());
 app.use(express.json());
@@ -115,7 +119,7 @@ app.post('/api/admin/login', (req, res) => {
     const { password } = req.body;
     const adminPass = process.env.ADMIN_PASSWORD || 'admin123';
     if (password === adminPass) {
-        res.json({ success: true, token: 'slurpin_secure_token_abc987' });
+        res.json({ success: true, token: ADMIN_TOKEN });
     } else {
         res.status(401).json({ success: false, message: 'Invalid admin password' });
     }
@@ -153,7 +157,7 @@ app.post('/api/admin/reset-password', (req, res) => {
 
 function verifyAdmin(req, res, next) {
     const token = req.headers['x-admin-token'];
-    if (token === 'slurpin_secure_token_abc987') {
+    if (token === ADMIN_TOKEN) {
         next();
     } else {
         res.status(401).json({ success: false, message: 'Unauthorized' });
